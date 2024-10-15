@@ -1,0 +1,31 @@
+Arabic,ar
+Croatian,hr
+Czech,cs
+Danish,da
+Dutch,nl
+English,en
+Finnish,fi
+French,fr
+French Canadian,fr-CA
+German,de
+Greek,el
+Hebrew,he
+Hungarian,hu
+Italian,it
+Japanese,ja
+Korean,ko
+Norwegian,no
+Polish,pl
+Portuguese,pt
+Portuguese Brazilian,pt-BR
+Romanian,ro
+Russian,ru
+Simplified Chinese,zh-CN
+Slovak,sk
+Slovenian,sl
+Spanish,es
+Swedish,sv
+Thai,th
+Traditional Chinese,zh-TW
+Turkish,tr
+Vietnamese,vi

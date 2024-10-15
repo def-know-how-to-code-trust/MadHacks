@@ -1,0 +1,53 @@
+Passphrase Ming
+
+
+scp -i [path_to_your_private_key] [path_to_local_file] [username]@[instance_ip]:[remote_path]
+
+scp -i [path_to_your_private_key] -r [path_to_local_file] [username]@[instance_ip]:[remote_path]
+
+NVIM controls
+I understand. Neovim can be overwhelming at first. Here's a condensed list of essential commands to get you started:
+
+1. Open a file: `nvim filename`
+
+2. Modes:
+   - Enter Insert mode: `i`
+   - Exit Insert mode to Normal mode: `Esc`
+
+3. Saving and Quitting:
+   - Save: `:w`
+   - Quit: `:q`
+   - Save and quit: `:wq`
+   - Quit without saving: `:q!`
+
+4. Navigation (in Normal mode):
+   - Move: Arrow keys or `h` (left), `j` (down), `k` (up), `l` (right)
+   - Start of line: `0`
+   - End of line: `$`
+   - Next word: `w`
+   - Previous word: `b`
+
+5. Editing (in Normal mode):
+   - Delete line: `dd`
+   - Copy line: `yy`
+   - Paste: `p`
+   - Undo: `u`
+   - Redo: `Ctrl + r`
+
+6. Search:
+   - Find: `/searchterm` then Enter
+   - Next occurrence: `n`
+   - Previous occurrence: `N`
+
+7. Replace:
+   - Replace all occurrences: `:%s/old/new/g`
+
+Remember, you need to be in Normal mode (press `Esc`) before using most of these commands. Start with these basics and gradually add more as you get comfortable. Would you like me to explain any of these in more detail?
+
+
+torch.set_num_threads(48)
+
+
+
+
+mv Send/* ./ && rm -r Send

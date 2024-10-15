@@ -1,0 +1,12 @@
+# Ignore all files in the ingorethis directory
+ingorethis/*
+
+# Ignore macOS system files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+
+# Ignore API key directory
+APIKEY/
