@@ -26,19 +26,26 @@ def process_audio():
     if file.filename == '':
         return jsonify({'error': 'No selected file'}), 400
     if file:
-        # Save the file temporarily
-        temp_path = 'temp_audio'
-        file.save(temp_path)
-        # Process the file
-        result, audio_duration, transcription_time = transcribe_with_timing(temp_path)
-        # Clean up
-        os.remove(temp_path)
-        # Return results
-        return jsonify({
-            'result': result,
-            'audio_duration': audio_duration,
-            'transcription_time': transcription_time
-        })
+        try:
+            # Save the file temporarily
+            temp_path = 'temp_audio'
+            file.save(temp_path)
+            # Process the file
+            result, audio_duration, transcription_time = transcribe_with_timing(temp_path)
+            # Clean up
+            os.remove(temp_path)
+            # Return results
+            return jsonify({
+                'result': result,
+                'audio_duration': audio_duration,
+                'transcription_time': transcription_time
+            })
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+
+@app.route('/health', methods=['GET'])
+def health_check():
+    return jsonify({'status': 'healthy'}), 200
 
 def get_audio_duration(file_path):
     audio = AudioSegment.from_file(file_path)
@@ -61,54 +68,9 @@ def list_audio_files(directory):
     audio_extensions = ('.mp3', '.wav', '.ogg', '.flac', '.m4a', '.wma', '.aac', '.aiff', '.au', '.raw')
     return [f for f in os.listdir(directory) if f.lower().endswith(audio_extensions)]
 
+
 def main():
     app.run(host='127.0.0.1', port=8000)
-    parser = argparse.ArgumentParser(description="Transcribe audio files using Whisper")
-    parser.add_argument("--file", help="Specific audio file to transcribe")
-    args = parser.parse_args()
-
-    current_dir = os.getcwd()
-
-    while True:
-        if args.file:
-            file_path = os.path.join(current_dir, args.file)
-            if os.path.exists(file_path):
-                preferred_lang = prefLang()
-                process_file(file_path, preferred_lang)
-            else:
-                print(f"File not found: {file_path}")
-            args.file = None  # Reset the file argument after processing
-        else:
-            audio_files = list_audio_files(current_dir)
-            if not audio_files:
-                print("No audio files found in the current directory.")
-                break
-
-            print("\nAvailable audio files:")
-            for i, file in enumerate(audio_files, 1):
-                print(f"{i}. {file}")
-            print("q. Quit the program")
-
-            choice = input("Enter the number of the file to transcribe (or 'q' to quit): ")
-            if choice.lower() == 'q':
-                break
-            try:
-                file_index = int(choice) - 1
-                if 0 <= file_index < len(audio_files):
-                    file_path = os.path.join(current_dir, audio_files[file_index])
-                    preferred_lang = prefLang()
-                    process_file(file_path, preferred_lang)
-                else:
-                    print("Invalid selection. Please try again.")
-            except ValueError:
-                print("Invalid input. Please enter a number or 'q' to quit.")
-
-        print("\nWould you like to process another file?")
-        continue_choice = input("Enter 'y' to continue or any other key to quit: ")
-        if continue_choice.lower() != 'y':
-            break
-
-    print("Thank you for using the audio transcription and translation tool. Goodbye!")
 
 def translator(input_text, in_lang, out_lang):
     uuid = uuid_gen(input_text)
