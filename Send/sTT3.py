@@ -8,37 +8,64 @@ from prettytable import PrettyTable
 from oci.config import from_file
 import json
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 
 file_path = "supportLang.txt"
 app = Flask(__name__)
 config = from_file(file_location="config")
+app.config['PERMANENT_SESSION_LIFETIME'] = 300  # seconds
+app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 300  # seconds
 trans_client = oci.ai_language.AIServiceLanguageClient(config)
 
 FISH = config.get("compartmenter")
 
 model = whisper.load_model("turbo")
-
 @app.route('/process', methods=['POST'])
 def process_audio():
     if 'file' not in request.files:
         return jsonify({'error': 'No file part'}), 400
+    #assigning the values taken from the post
     file = request.files['file']
+    targetLang = request.form.get('targetLang')
+    userID = request.form.get('userID')
+    
     if file.filename == '':
         return jsonify({'error': 'No selected file'}), 400
+    if not targetLang or targetLang == '' or targetLang is None:
+        return jsonify({'error': 'No target language specified, e.g {"targetLang": "en"}'}), 400
+    if not userID or userID == '' or userID is None:
+        return jsonify({'error': 'No user ID specified, e.g {"userID": "uase123"'}), 400
+    
+
     if file:
+        uuid_file = uuid_gen(userID)
         try:
             # Save the file temporarily
-            temp_path = 'temp_audio'
+            temp_path = (f'temp_audio_{userID}+{uuid_file}')
             file.save(temp_path)
             # Process the file
             result, audio_duration, transcription_time = transcribe_with_timing(temp_path)
+            # translate the file
+            # first get the segments
+            # batch transalte for better accuracy
+            # join the batch translated text
+            preferred_lang = targetLang
+            segments = result['segments']
+            batched_translations = batch_translate_segments(segments, result['language'], preferred_lang)
+            translated = ' '.join(batched_translations)
             # Clean up
             os.remove(temp_path)
+            #clean up the results, to only send the transcibed text
             # Return results
             return jsonify({
-                'result': result,
                 'audio_duration': audio_duration,
-                'transcription_time': transcription_time
+                'transcription_time': transcription_time,
+                'time_ratio_trans' : transcription_time / audio_duration,
+                'result': result['text'],
+                'transalated' : translated,
+                'source_lang' : result['language'],
+                'target_lang' : preferred_lang
+
             })
         except Exception as e:
             return jsonify({'error': str(e)}), 500
@@ -64,9 +91,9 @@ def transcribe_with_timing(file_path):
     
     return result, audio_duration, transcription_time
 
-def list_audio_files(directory):
-    audio_extensions = ('.mp3', '.wav', '.ogg', '.flac', '.m4a', '.wma', '.aac', '.aiff', '.au', '.raw')
-    return [f for f in os.listdir(directory) if f.lower().endswith(audio_extensions)]
+# def list_audio_files(directory):
+#     audio_extensions = ('.mp3', '.wav', '.ogg', '.flac', '.m4a', '.wma', '.aac', '.aiff', '.au', '.raw')
+#     return [f for f in os.listdir(directory) if f.lower().endswith(audio_extensions)]
 
 
 def main():
@@ -102,27 +129,27 @@ def uuid_gen(input):
     t = t[-20:]
     return t
 
-def prefLang():
-    table = printTableLang()
-    print("Enter the language code for the output language:")
-    print(table)
-    outLang = input("Enter the language code for the output language: ")
-    return outLang
+# def prefLang():
+#     table = printTableLang()
+#     print("Enter the language code for the output language:")
+#     print(table)
+#     outLang = input("Enter the language code for the output language: ")
+#     return outLang
 
-def printTableLang():
-    content = ""
-    with open(file_path, 'r') as file:
-        content = [line.strip().split(',') for line in file if line.strip()]
-    table = PrettyTable()
-    table.field_names = ["Language", "Language Code"]
+# def printTableLang():
+#     content = ""
+#     with open(file_path, 'r') as file:
+#         content = [line.strip().split(',') for line in file if line.strip()]
+#     table = PrettyTable()
+#     table.field_names = ["Language", "Language Code"]
     
-    for language, code in content:
-        table.add_row([language, code])
+#     for language, code in content:
+#         table.add_row([language, code])
     
-    table.align["Language"] = "l"  # Left align the Language column
-    table.align["Language Code"] = "c"  # Center align the Language Code column
+#     table.align["Language"] = "l"  # Left align the Language column
+#     table.align["Language Code"] = "c"  # Center align the Language Code column
     
-    return table
+#     return table
 
 def batch_translate_segments(segments, source_lang, target_lang):
     translations = []
